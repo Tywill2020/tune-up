@@ -5,20 +5,31 @@
 Use the timeit and cProfile libraries to find bad code.
 """
 
-__author__ = "???"
+__author__ = 'Tyrell Williams'
 
 import cProfile
 import pstats
 import functools
+import io 
+import timeit
 
 
 def profile(func):
     """A cProfile decorator function that can be used to
     measure performance.
     """
-    # Be sure to review the lesson material on decorators.
-    # You need to understand how they are constructed and used.
-    raise NotImplementedError("Complete this decorator function")
+    def inner(*args, **kwargs):
+        pr = cProfile.Profile()
+        pr.enable()
+        retval = func(*args, **kwargs)
+        pr.disable()
+        s = io.StringIO()
+        sortby = 'cumulative'
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        ps.print_stats()
+        print(s.getvalue())
+        return retval
+    return inner 
 
 
 def read_movies(src):
@@ -28,38 +39,23 @@ def read_movies(src):
         return f.read().splitlines()
 
 
-def is_duplicate(title, movies):
-    """Returns True if title is within movies list."""
-    for movie in movies:
-        if movie.lower() == title.lower():
-            return True
-    return False
-
-
 def find_duplicate_movies(src):
     """Returns a list of duplicate movies from a src list."""
-    # Not optimized
     movies = read_movies(src)
+    movies = [movie.lower() for movie in movies]
     duplicates = []
     while movies:
         movie = movies.pop()
-        if is_duplicate(movie, movies):
+        if movie in movies:
             duplicates.append(movie)
     return duplicates
-
-#
-# Students: write a better version of find_duplicate_movies
-#
-def optimized_find_duplicate_movies(src):
-    # Your code here
-    return
 
 
 def timeit_helper(func_name, func_param):
     """Part A: Obtain some profiling measurements using timeit"""
     assert isinstance(func_name, str)
-    # stmt = ???
-    # setup = ???
+    # stmt = main()
+    # setup = "import tuneup"
     # t = ???
     # runs_per_repeat = 3
     # num_repeats = 5
@@ -91,8 +87,6 @@ def main():
     print("\n--- cProfile results, before optimization ---")
     profile(find_duplicate_movies)(filename)
     
-    print("\n--- cProfile results, after optimization ---")
-    profile(optimized_find_duplicate_movies)(filename)
 
 if __name__ == '__main__':
     main()
